@@ -1,0 +1,10 @@
+{
+  "name": "storage-helper",
+  "version": "1.0.0",
+  "description": "Package which helps you add and retrieve items from storage containers",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "globaloffensive": "^2.1.0",
+    "steam-user": "^4.19.4"
+  }
+}
