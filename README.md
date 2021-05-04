@@ -1,7 +1,7 @@
-#Storage Helper
-###Package which helps you add and retrieve items from storage containers
+# Storage Helper
+### Package which helps you add and retrieve items from storage containers
 
-#Example:
+# Example:
 
 ```js
 const storageHelper = new StorageHelper();
