@@ -31,7 +31,7 @@ helper.on('ready', function () {
 	helper.getItemsFromStorageUnit("StorageUnit1");
 
 	// Or the following to only withdraw a maximum of 5 items from "StorageUnit1:
-    // helper.getItemsFromStorageUnit("StorageUnit1", 5);
+	// helper.getItemsFromStorageUnit("StorageUnit1", 5);
 });
 ```
 
