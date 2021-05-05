@@ -49,7 +49,7 @@ class StorageHelper extends EventEmitter {
 	};
 
 	/**
-	 * Async function to add items of one type to storage unit
+	 * Async function to add items of one type to a storage unit
 	 * @param {string} storageUnitName Name of the storage unit, defined by the user
 	 * @param {string} itemName Full name of the item which will be added to the storage unit
 	 * @param {number} max Amount of items to add, default will be used if this number exceeds the available space
@@ -57,11 +57,8 @@ class StorageHelper extends EventEmitter {
 	addItemsToStorageUnit = async (storageUnitName, itemName, max = -1) => {
 		const storageUnitMaxCapacity = 1000;
 
-		if (!this._isLoggedIn) {
-			return console.log('Not logged in');
-		}
-		else if (!this._csgo.haveGCSession) {
-			return console.log('Not connected to GC');
+		if(!this._isReady()){
+			return;
 		}
 
 		const steamId = this._user.steamID.getSteamID64();
@@ -69,29 +66,71 @@ class StorageHelper extends EventEmitter {
 
 		if (this._inventory) {
 			const storageUnit = this._getStorageUnitByName(storageUnitName);
+			if (!storageUnit) {
+				return;
+			}
+
 			const assetIds = this._getAssetidsForName(itemName);
 			let maxItems = storageUnitMaxCapacity - storageUnit.currentQuantity;
 
-			if(assetIds.length === 0){
+			if (assetIds.length === 0) {
 				return console.log(`No items found for given name ${itemName}`);
 			}
 
-			if(assetIds.length < maxItems){
+			if (assetIds.length < maxItems) {
 				maxItems = assetIds.length;
 			}
 
-			if(max > 0 && max < maxItems){
+			if (max > 0 && max < maxItems) {
 				maxItems = max;
 			}
 
 			for (let i = 0; i < maxItems; i++) {
 				this._csgo.addToCasket(storageUnit.id, assetIds[i]);
-				await this._sleep(500);
+				await this._sleep();
 			}
 		}
 
 		else {
 			console.log('Failed to fetch inventory');
+		}
+	};
+
+	/**
+	 * Async function to retrieve items of one type from a storage unit
+	 * @param {string} storageUnitName Name of the storage unit, defined by the user
+	 * @param {number} max Amount of items to retrieve, default will be used if this number exceeds the amount of items in storage unit
+	 */
+	getItemsFromStorageUnit = async (storageUnitName, max = -1) => {
+		if(!this._isReady()){
+			return;
+		}
+
+		const steamId = this._user.steamID.getSteamID64();
+		await this._fetchInventory(steamId);
+
+		if (this._inventory) {
+
+			const storageUnit = this._getStorageUnitByName(storageUnitName);
+			if (!storageUnit) {
+				return;
+			}
+
+			const assetIds = this._getAssetidsFromStorageUnit(storageUnit.id);
+			let maxItems = assetIds.length;
+
+			if (assetIds.length === 0) {
+				return console.log(`No items found in storage unit`);
+			}
+
+			if (max > 0 && max < maxItems) {
+				maxItems = max;
+			}
+
+			for (let i = 0; i < maxItems; i++) {
+				this._csgo.removeFromCasket(storageUnit.id, assetIds[i]);
+				await this._sleep();
+			}
 		}
 	};
 
@@ -156,12 +195,34 @@ class StorageHelper extends EventEmitter {
 		if (item) {
 			const classId = item.classid;
 
-			return assets.filter(asset => asset.classid === classId).map(function (obj) {
+			return assets.filter(asset => asset.classid === classId && !asset.hasOwnProperty('casket_id')).map(function (obj) {
 				return parseInt(obj.assetid);
 			});
 		}
 
 		return [];
+	};
+
+	/**
+	 * Returns an array with assetids for all items in a storage unit
+	 * @param {Number} storageUnitId
+	 * @private
+	 */
+	_getAssetidsFromStorageUnit = (storageUnitId) => {
+		let inventory = [];
+		this._csgo.getCasketContents(storageUnitId, (err, items) => {
+			if (err) {
+				console.log(err.message);
+				return [];
+			}
+			else {
+				inventory = items;
+			}
+		});
+
+		return inventory.map(function (obj) {
+			return parseInt(obj.id);
+		});
 	};
 
 	/**
@@ -187,17 +248,35 @@ class StorageHelper extends EventEmitter {
 			if (notificationType === GlobalOffensive.ItemCustomizationNotification.CasketAdded) {
 				console.log('Item added to Storage unit');
 			}
+
+			if (notificationType === GlobalOffensive.ItemCustomizationNotification.CasketRemoved) {
+				console.log('Item removed from Storage unit');
+			}
 		});
 	};
 
 	/**
 	 * Returns Promise which is resolved after the timeout defined in ms has passed
-	 * @param {number} ms
 	 * @private
 	 */
-	_sleep = (ms) => {
-		return new Promise(resolve => setTimeout(resolve, ms));
-	}
+	_sleep = () => {
+		return new Promise(resolve => setTimeout(resolve, 500));
+	};
+
+	/**
+	 * Returns boolean which indicates if the user is logged in and has a connection to GC
+	 * @private
+	 */
+	_isReady = () =>{
+		if (!this._isLoggedIn) {
+			console.log('Not logged in');
+		}
+		else if (!this._csgo.haveGCSession) {
+			console.log('Not connected to GC');
+		}
+
+		return this._isLoggedIn && this._csgo.haveGCSession;
+	};
 }
 
 module.exports.StorageHelper = StorageHelper;
