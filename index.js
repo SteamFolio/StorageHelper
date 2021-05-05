@@ -85,6 +85,8 @@ class StorageHelper extends EventEmitter {
 				maxItems = max;
 			}
 
+			console.log(`Adding ${maxItems} ${itemName} to ${storageUnitName}`);
+
 			for (let i = 0; i < maxItems; i++) {
 				this._csgo.addToCasket(storageUnit.id, assetIds[i]);
 				await this._sleep();
@@ -126,6 +128,8 @@ class StorageHelper extends EventEmitter {
 			if (max > 0 && max < maxItems) {
 				maxItems = max;
 			}
+
+			console.log(`Withdrawing ${maxItems} items from ${storageUnitName}`);
 
 			for (let i = 0; i < maxItems; i++) {
 				this._csgo.removeFromCasket(storageUnit.id, assetIds[i]);
