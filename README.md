@@ -10,6 +10,7 @@ const helper = new StorageHelper();
 helper.login("username", "password");
 
 helper.on('ready', function () {
+	// To deposit all Prisma Cases into "StorageUnit1"
 	helper.addItemsToStorageUnit("StorageUnit1", "Prisma Case");
 
 	// Or the following to only deposit a maximum of 5 Prisma Cases:
@@ -17,7 +18,7 @@ helper.on('ready', function () {
 });
 ```
 
-### Example for withdrawing 5 items from a storage unit named "StorageUnit1":
+### Example for withdrawing items from a storage unit named "StorageUnit1":
 
 ```js
 const {StorageHelper} = require('./index');
@@ -26,7 +27,11 @@ const helper = new StorageHelper();
 helper.login("username", "password");
 
 helper.on('ready', function () {
-	helper.getItemsFromStorageUnit("StorageUnit1", 5);
+	// To withdraw all items from "StorageUnit1"
+	helper.getItemsFromStorageUnit("StorageUnit1");
+
+	// Or the following to only withdraw a maximum of 5 items from "StorageUnit1:
+    // helper.getItemsFromStorageUnit("StorageUnit1", 5);
 });
 ```
 
