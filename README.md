@@ -1,7 +1,7 @@
 # Storage Helper
-### Package which helps you add and retrieve items from storage containers
+Package which helps you add and retrieve items from storage containers
 
-# Example for adding Prisma cases to a storage unit named "StorageUnit1":
+### Example for adding Prisma cases to a storage unit named "StorageUnit1":
 
 ```js
 const {StorageHelper} = require('./index');
@@ -17,7 +17,7 @@ helper.on('ready', function () {
 });
 ```
 
-# Example for withdrawing 5 items from a storage unit named "StorageUnit1":
+### Example for withdrawing 5 items from a storage unit named "StorageUnit1":
 
 ```js
 const {StorageHelper} = require('./index');
