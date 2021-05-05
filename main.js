@@ -4,7 +4,6 @@ const EventEmitter = require('events').EventEmitter;
 const SteamUser = require('steam-user');
 const GlobalOffensive = require('globaloffensive');
 
-
 /**
  * Contains the unique id and current quantity of the storage unit
  */
@@ -51,15 +50,18 @@ class StorageHelper extends EventEmitter {
 
 	/**
 	 * Async function to add items of one type to storage unit
-	 * @param {string} storageUnitName
-	 * @param {string} itemName
+	 * @param {string} storageUnitName Name of the storage unit, defined by the user
+	 * @param {string} itemName Full name of the item which will be added to the storage unit
+	 * @param {number} max Amount of items to add, default will be used if this number exceeds the available space
 	 */
-	addItemsToStorageUnit = async (storageUnitName, itemName) => {
+	addItemsToStorageUnit = async (storageUnitName, itemName, max = -1) => {
+		const storageUnitMaxCapacity = 1000;
+
 		if (!this._isLoggedIn) {
-			return console.log("Not logged in");
+			return console.log('Not logged in');
 		}
 		else if (!this._csgo.haveGCSession) {
-			return console.log("Not connected to GC");
+			return console.log('Not connected to GC');
 		}
 
 		const steamId = this._user.steamID.getSteamID64();
@@ -68,15 +70,28 @@ class StorageHelper extends EventEmitter {
 		if (this._inventory) {
 			const storageUnit = this._getStorageUnitByName(storageUnitName);
 			const assetIds = this._getAssetidsForName(itemName);
-			const maxItems = 1000 - storageUnit.currentQuantity;
+			let maxItems = storageUnitMaxCapacity - storageUnit.currentQuantity;
 
-			for (let i = 0; i <= maxItems; i++) {
+			if(assetIds.length === 0){
+				return console.log(`No items found for given name ${itemName}`);
+			}
+
+			if(assetIds.length < maxItems){
+				maxItems = assetIds.length;
+			}
+
+			if(max > 0 && max < maxItems){
+				maxItems = max;
+			}
+
+			for (let i = 0; i < maxItems; i++) {
 				this._csgo.addToCasket(storageUnit.id, assetIds[i]);
+				await this._sleep(500);
 			}
 		}
 
 		else {
-			console.log("Failed to fetch inventory");
+			console.log('Failed to fetch inventory');
 		}
 	};
 
@@ -107,7 +122,7 @@ class StorageHelper extends EventEmitter {
 		const inventory = this._inventory;
 		const descriptions = inventory.descriptions;
 		const assets = inventory.assets;
-		const storageUnits = descriptions.filter(item => item.name === "Storage Unit");
+		const storageUnits = descriptions.filter(item => item.name === 'Storage Unit');
 
 		if (storageUnits && storageUnits.length > 0) {
 			const nameTagTemplate = `Name Tag: ''${name}''`;
@@ -175,4 +190,14 @@ class StorageHelper extends EventEmitter {
 		});
 	};
 
+	/**
+	 * Returns Promise which is resolved after the timeout defined in ms has passed
+	 * @param {number} ms
+	 * @private
+	 */
+	_sleep = (ms) => {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
 }
+
+module.exports.StorageHelper = StorageHelper;
